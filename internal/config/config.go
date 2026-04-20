@@ -2,7 +2,22 @@
 // These types are used by both the sender and receiver to describe multicast group parameters.
 package config
 
-import "errors"
+import (
+	"errors"
+	"net"
+)
+
+var ssmRange = &net.IPNet{
+	IP:   net.IP{232, 0, 0, 0},
+	Mask: net.CIDRMask(8, 32),
+}
+
+// IsSSMAddress reports whether ip falls in the IANA SSM range 232.0.0.0/8.
+// SSM (Source-Specific Multicast) groups must be in this range; groups
+// outside it use ASM (Any-Source Multicast).
+func IsSSMAddress(ip net.IP) bool {
+	return ssmRange.Contains(ip)
+}
 
 // GroupSpec describes a single multicast group that the sender or receiver will operate on.
 // Each field maps to a CLI flag or config value; see cmd/sender and cmd/receiver for usage.
