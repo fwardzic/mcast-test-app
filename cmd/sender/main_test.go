@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fwardzic/mcast-test-app/internal/config"
 	"github.com/fwardzic/mcast-test-app/internal/packet"
 )
 
@@ -35,13 +36,17 @@ func (m *mockWriter) getCount() int {
 
 func TestValidateFlags(t *testing.T) {
 	// Save original flag values and restore after test.
-	origGroup := *group
+	origGroups := *groups
+	origSymbols := *symbols
+	origSource := *source
 	origPort := *port
 	origIface := *iface
 	origTTL := *ttl
 	origRate := *rate
 	defer func() {
-		*group = origGroup
+		*groups = origGroups
+		*symbols = origSymbols
+		*source = origSource
 		*port = origPort
 		*iface = origIface
 		*ttl = origTTL
@@ -50,11 +55,13 @@ func TestValidateFlags(t *testing.T) {
 
 	// setDefaults puts all flags into a known-good state.
 	setDefaults := func() {
-		*group = "239.1.1.1"
-		*port = 5000
-		*iface = "lo"
-		*ttl = 2
-		*rate = 1
+		*groups  = []string{"239.1.1.1"}
+		*symbols = []string{"AAPL"}
+		*source  = ""
+		*port    = 5000
+		*iface   = "lo"
+		*ttl     = 2
+		*rate    = 1
 	}
 
 	tests := []struct {
@@ -69,12 +76,12 @@ func TestValidateFlags(t *testing.T) {
 		},
 		{
 			name:    "invalid group IP",
-			setup:   func() { setDefaults(); *group = "notanip" },
+			setup:   func() { setDefaults(); *groups = []string{"notanip"}; *symbols = []string{"X"} },
 			wantErr: "invalid",
 		},
 		{
 			name:    "non-multicast group",
-			setup:   func() { setDefaults(); *group = "10.0.0.1" },
+			setup:   func() { setDefaults(); *groups = []string{"10.0.0.1"}; *symbols = []string{"X"} },
 			wantErr: "multicast",
 		},
 		{
@@ -86,6 +93,31 @@ func TestValidateFlags(t *testing.T) {
 			name:    "rate zero",
 			setup:   func() { setDefaults(); *rate = 0 },
 			wantErr: "rate",
+		},
+		{
+			name:    "no groups",
+			setup:   func() { setDefaults(); *groups = nil; *symbols = nil },
+			wantErr: "group",
+		},
+		{
+			name:    "symbol count mismatch",
+			setup:   func() { setDefaults(); *groups = []string{"239.1.1.1", "239.2.2.2"} },
+			wantErr: "symbol",
+		},
+		{
+			name:    "SSM group without source",
+			setup:   func() { setDefaults(); *groups = []string{"232.1.1.1"}; *symbols = []string{"X"} },
+			wantErr: "--source",
+		},
+		{
+			name:    "non-SSM group with source",
+			setup:   func() { setDefaults(); *source = "10.0.0.1" },
+			wantErr: "non-SSM",
+		},
+		{
+			name:    "valid SSM with source",
+			setup:   func() { setDefaults(); *groups = []string{"232.1.1.1"}; *symbols = []string{"X"}; *source = "10.0.0.1" },
+			wantErr: "",
 		},
 		{
 			name:    "valid flags",
@@ -139,7 +171,7 @@ func TestSendLoop_CancelledContext(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		sendLoop(ctx, mw, dst, "239.1.1.1", 100)
+		sendLoop(ctx, mw, dst, config.GroupSpec{Group: "239.1.1.1", Symbol: "AAPL"}, 100)
 		close(done)
 	}()
 
@@ -164,7 +196,7 @@ func TestSendLoop_SendsPackets(t *testing.T) {
 	mw := &mockWriter{}
 	dst := &net.UDPAddr{IP: net.ParseIP("239.1.1.1"), Port: 5000}
 
-	sendLoop(ctx, mw, dst, "239.1.1.1", 100)
+	sendLoop(ctx, mw, dst, config.GroupSpec{Group: "239.1.1.1", Symbol: "AAPL"}, 100)
 
 	c := mw.getCount()
 	if c < 5 || c > 25 {
@@ -207,7 +239,7 @@ func TestSendLoop_SequenceNumbersAreMonotonicallyIncreasing(t *testing.T) {
 	rw := &recordingWriter{}
 	dst := &net.UDPAddr{IP: net.ParseIP("239.1.1.1"), Port: 5000}
 
-	sendLoop(ctx, rw, dst, "239.1.1.1", 100)
+	sendLoop(ctx, rw, dst, config.GroupSpec{Group: "239.1.1.1", Symbol: "AAPL"}, 100)
 
 	payloads := rw.getPackets()
 	if len(payloads) < 2 {
@@ -252,7 +284,7 @@ func TestSendLoop_SignalNotifyContext_ShutdownViaSIGINT(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		sendLoop(ctx, rw, dst, "239.1.1.1", 10) // slow rate so we don't flood
+		sendLoop(ctx, rw, dst, config.GroupSpec{Group: "239.1.1.1", Symbol: "AAPL"}, 10) // slow rate so we don't flood
 		close(done)
 	}()
 
