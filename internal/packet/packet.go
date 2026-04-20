@@ -8,6 +8,7 @@ package packet
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -37,11 +38,14 @@ type Packet struct {
 // Now returns the current time formatted as RFC 3339 with millisecond precision.
 // Used by the sender to stamp each packet.
 func Now() string {
-	return time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	return time.Now().UTC().Format("2006-01-02T15:04:05.000Z07:00")
 }
 
 // Encode serialises a Packet to JSON bytes for transmission.
 func Encode(p *Packet) ([]byte, error) {
+	if p == nil {
+		return nil, errors.New("packet: cannot encode nil Packet")
+	}
 	return json.Marshal(p)
 }
 

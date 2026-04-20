@@ -75,6 +75,13 @@ func TestDecodeInvalidJSON(t *testing.T) {
 	}
 }
 
+func TestEncodeNil(t *testing.T) {
+	_, err := Encode(nil)
+	if err == nil {
+		t.Error("expected error when encoding nil Packet, got nil")
+	}
+}
+
 func TestNowFormat(t *testing.T) {
 	ts := Now()
 	// RFC 3339 with millis: "2026-04-20T12:34:56.789Z"
