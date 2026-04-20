@@ -1,1 +1,5 @@
 .planning/
+bin/
+sender
+receiver
+*.exe
