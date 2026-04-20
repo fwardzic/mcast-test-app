@@ -197,12 +197,13 @@ func receiveLoop(ctx context.Context, pc *ipv4.PacketConn, packetCh chan<- Recei
 			continue // log and skip; don't crash the loop
 		}
 
-		packetCh <- ReceivedPacket{
-			Pkt: p,
-			TTL: cm.TTL,
-			Src: cm.Src,
-			Dst: cm.Dst,
+		rp := ReceivedPacket{Pkt: p}
+		if cm != nil {
+			rp.TTL = cm.TTL
+			rp.Src = cm.Src
+			rp.Dst = cm.Dst
 		}
+		packetCh <- rp
 	}
 }
 
