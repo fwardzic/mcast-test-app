@@ -48,8 +48,8 @@ Phase 6 → Container & K8s   static builds, Dockerfile, Kubernetes manifests
 **Requirements mapped:** SEND-01, SEND-02, SEND-03, SEND-04, SEND-08
 
 ### Plans
-1. **`internal/multicast` — sender socket helpers** — `NewSenderConn(iface, ttl)` wrapping `net.ListenUDP` + `ipv4.NewPacketConn`; `SetMulticastInterface`; `SetMulticastLoopback(false)`. Comment explaining why loopback is disabled by default and the `--loopback` flag escape hatch.
-2. **`cmd/sender` — single-group send loop** — `flag` parsing for `-group`, `-port`, `-iface`, `-ttl`, `-rate`, `-loopback`; `sendLoop` goroutine using `time.Ticker`; monotonically increasing sequence counter; `packet.Encode` → `WriteTo`; basic `log/slog` output per send.
+1. ✅ **`internal/multicast` — sender socket helpers** — `NewSenderConn(iface, ttl)` wrapping `net.ListenUDP` + `ipv4.NewPacketConn`; `SetMulticastInterface`; `SetMulticastLoopback(false)`. Comment explaining why loopback is disabled by default and the `--loopback` flag escape hatch.
+2. ✅ **`cmd/sender` — single-group send loop** — `flag` parsing for `-group`, `-port`, `-iface`, `-ttl`, `-rate`, `-loopback`; `sendLoop` goroutine using `time.Ticker`; monotonically increasing sequence counter; `packet.Encode` → `WriteTo`; basic `log/slog` output per send.
 3. **Graceful shutdown** — `signal.NotifyContext` for `SIGINT`/`SIGTERM`; `context.Cancel` propagates to `sendLoop`; `wg.Wait()` before exit. Inline comments walking a beginner through the goroutine lifecycle.
 
 ### Success Criteria

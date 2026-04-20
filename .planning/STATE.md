@@ -2,22 +2,23 @@
 gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
-current_phase: "01"
+current_phase: "02"
+current_plan: 3
 status: executing
-last_updated: "2026-04-20T13:00:00.000Z"
+last_updated: "2026-04-20"
 progress:
-  total_phases: 1
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 0
-  percent: 0
+  total_phases: 2
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 5
+  percent: 72
 ---
 
 # State: mcast-test-app
 
 **Last updated:** 2026-04-20
-**Current phase:** 01 (Foundation)
-**Current plan:** 01-03 complete
+**Current phase:** 02
+**Current plan:** 3
 **Overall status:** In progress
 
 ---
@@ -26,8 +27,8 @@ progress:
 
 | Phase | Name | Status | Plans Done |
 |-------|------|--------|-----------|
-| 1 | Foundation | 🔲 Not started | 0 / 3 |
-| 2 | Sender Core | 🔲 Not started | 0 / 3 |
+| 1 | Foundation | ✅ Complete | 3 / 3 |
+| 2 | Sender Core | 🔄 In progress | 2 / 3 |
 | 3 | Multi-Group & IGMP | 🔲 Not started | 0 / 3 |
 | 4 | Receiver Core | 🔲 Not started | 0 / 3 |
 | 5 | Terminal Display | 🔲 Not started | 0 / 3 |
@@ -37,7 +38,7 @@ progress:
 
 ## Phase 1 — Foundation
 
-**Status:** Executing Phase 01 — Plan 01-03 complete
+**Status:** Executing Plan 02-03
 **Goal:** Establish project skeleton and shared internal packages.
 
 ### Plans
@@ -54,13 +55,13 @@ None.
 
 ## Phase 2 — Sender Core
 
-**Status:** Not started (blocked on Phase 1)
+**Status:** In progress
 **Goal:** Working single-group multicast sender with CLI flags and graceful shutdown.
 
 ### Plans
 
-- [ ] 2.1 `internal/multicast` sender socket helpers
-- [ ] 2.2 `cmd/sender` single-group send loop
+- [x] 2.1 `internal/multicast` sender socket helpers
+- [x] 2.2 `cmd/sender` single-group send loop
 - [ ] 2.3 Graceful shutdown
 
 ---
@@ -124,9 +125,12 @@ None.
 | 2026-04-20 | 6 phases chosen | Standard granularity; matches architecture build order from research |
 | 2026-04-20 | Display deferred to Phase 5 | Receiver must work first; decouples debugging of multicast logic from UI bugs |
 | 2026-04-20 | Anchor .gitignore binary patterns | `/sender` and `/receiver` instead of `sender`/`receiver` to avoid ignoring cmd/ subdirectories |
+| 2026-04-20 | `contains` helper over `strings.Contains` in test | Avoids extra import for single use |
+| 2026-04-20 | TTL default 2 in sender binary | Cross-node multicast testing needs one router hop; differs from config.DefaultTTL=1 |
+| 2026-04-20 | go 1.25 auto-upgrade accepted | `go get golang.org/x/net` bumped go directive; no breaking changes |
 
 ---
 
 *State file created: 2026-04-20*
 
-**Planned Phase:** 01 (foundation) — 3 plans — 2026-04-20T10:53:33.143Z
+**Planned Phase:** 02 (sender-core) — 2 plans — 2026-04-20T11:41:07.382Z
