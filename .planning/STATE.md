@@ -17,7 +17,7 @@ progress:
 
 **Last updated:** 2026-04-20
 **Current phase:** 01 (Foundation)
-**Current plan:** 01-02 complete
+**Current plan:** 01-03 complete
 **Overall status:** In progress
 
 ---
@@ -37,14 +37,14 @@ progress:
 
 ## Phase 1 — Foundation
 
-**Status:** Executing Phase 01 — Plan 01-02 complete
+**Status:** Executing Phase 01 — Plan 01-03 complete
 **Goal:** Establish project skeleton and shared internal packages.
 
 ### Plans
 
 - [x] 1.1 Repo & module init
 - [x] 1.2 `internal/config` package
-- [ ] 1.3 `internal/packet` package
+- [x] 1.3 `internal/packet` package
 
 ### Blocking Issues
 
