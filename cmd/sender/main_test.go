@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"net"
+	"os"
+	"os/signal"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/fwardzic/mcast-test-app/internal/packet"
 )
 
 // mockWriter records how many times WriteTo was called.
@@ -165,5 +169,109 @@ func TestSendLoop_SendsPackets(t *testing.T) {
 	c := mw.getCount()
 	if c < 5 || c > 25 {
 		t.Fatalf("expected 5-25 packets sent in 150ms at 100pps, got %d", c)
+	}
+}
+
+// recordingWriter captures each raw payload written by sendLoop.
+type recordingWriter struct {
+	mu      sync.Mutex
+	packets [][]byte
+}
+
+func (r *recordingWriter) WriteTo(b []byte, dst net.Addr) (int, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	cp := make([]byte, len(b))
+	copy(cp, b)
+	r.packets = append(r.packets, cp)
+	return len(b), nil
+}
+
+func (r *recordingWriter) Close() error { return nil }
+
+func (r *recordingWriter) getPackets() [][]byte {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make([][]byte, len(r.packets))
+	copy(out, r.packets)
+	return out
+}
+
+// TestSendLoop_SequenceNumbersAreMonotonicallyIncreasing verifies SEND-02:
+// each packet written by sendLoop has a sequence number exactly one greater
+// than the previous packet (i.e. no gaps, no resets).
+func TestSendLoop_SequenceNumbersAreMonotonicallyIncreasing(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+
+	rw := &recordingWriter{}
+	dst := &net.UDPAddr{IP: net.ParseIP("239.1.1.1"), Port: 5000}
+
+	sendLoop(ctx, rw, dst, "239.1.1.1", 100)
+
+	payloads := rw.getPackets()
+	if len(payloads) < 2 {
+		t.Fatalf("need at least 2 packets to verify monotonic sequence; got %d", len(payloads))
+	}
+
+	var prev uint64
+	for i, raw := range payloads {
+		p, err := packet.Decode(raw)
+		if err != nil {
+			t.Fatalf("packet[%d]: decode error: %v", i, err)
+		}
+		if i == 0 {
+			if p.Sequence != 1 {
+				t.Fatalf("packet[0]: expected sequence 1 (first packet), got %d", p.Sequence)
+			}
+			prev = p.Sequence
+			continue
+		}
+		if p.Sequence != prev+1 {
+			t.Fatalf("packet[%d]: expected sequence %d, got %d (not monotonically increasing by 1)",
+				i, prev+1, p.Sequence)
+		}
+		prev = p.Sequence
+	}
+}
+
+// TestSendLoop_SignalNotifyContext_ShutdownViaSIGINT verifies SEND-08:
+// the signal.NotifyContext path in main() cancels the context on SIGINT,
+// which causes sendLoop to exit. We test this end-to-end in-process by
+// sending os.Interrupt to the current process and verifying sendLoop exits.
+//
+// Note: os.Interrupt is delivered as a signal to the whole process. We
+// install our own signal.NotifyContext here — mirroring what main() does —
+// to drive the context cancel, then verify sendLoop exits promptly.
+func TestSendLoop_SignalNotifyContext_ShutdownViaSIGINT(t *testing.T) {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	rw := &recordingWriter{}
+	dst := &net.UDPAddr{IP: net.ParseIP("239.1.1.1"), Port: 5000}
+
+	done := make(chan struct{})
+	go func() {
+		sendLoop(ctx, rw, dst, "239.1.1.1", 10) // slow rate so we don't flood
+		close(done)
+	}()
+
+	// Give the loop a moment to start ticking.
+	time.Sleep(20 * time.Millisecond)
+
+	// Send SIGINT to ourselves — this is the exact signal path main() uses.
+	p, err := os.FindProcess(os.Getpid())
+	if err != nil {
+		t.Fatalf("FindProcess: %v", err)
+	}
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatalf("Signal(SIGINT): %v", err)
+	}
+
+	select {
+	case <-done:
+		// Good — sendLoop exited after signal-driven context cancellation.
+	case <-time.After(2 * time.Second):
+		t.Fatal("sendLoop did not exit within 2s after SIGINT")
 	}
 }
