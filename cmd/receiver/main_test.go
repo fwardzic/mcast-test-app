@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -13,15 +14,6 @@ func (m *mockIGMPConn) LeaveGroup(*net.Interface, net.Addr) error               
 func (m *mockIGMPConn) JoinSourceSpecificGroup(*net.Interface, net.Addr, net.Addr) error  { return nil }
 func (m *mockIGMPConn) LeaveSourceSpecificGroup(*net.Interface, net.Addr, net.Addr) error { return nil }
 
-// contains checks if s contains substr.
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
 
 func TestValidateFlags(t *testing.T) {
 	// Save original flag values and restore after test.
@@ -109,7 +101,7 @@ func TestValidateFlags(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expected error containing %q, got nil", tt.wantErr)
 			}
-			if !contains(err.Error(), tt.wantErr) {
+			if !strings.Contains(err.Error(), tt.wantErr) {
 				t.Fatalf("error %q does not contain %q", err.Error(), tt.wantErr)
 			}
 		})
