@@ -30,7 +30,7 @@ Phase 6 → Container & K8s   static builds, Dockerfile, Kubernetes manifests
 
 ### Plans
 1. ✅ **Repo & module init** — `go mod init`, directory tree (`cmd/sender`, `cmd/receiver`, `internal/{config,packet,multicast,display}`, `k8s/`), `.gitignore`, top-level `Makefile` with `build`, `test`, `lint` targets.
-2. **`internal/config` package** — `GroupSpec` struct (group address, port, interface, TTL, symbol, source IP for SSM). Beginner-friendly comments explaining each field's role in multicast. Unit tests.
+2. ✅ **`internal/config` package** — `GroupSpec` struct (group address, port, interface, TTL, symbol, source IP for SSM). Beginner-friendly comments explaining each field's role in multicast. Unit tests.
 3. **`internal/packet` package** — `Packet` struct (Sequence, Group, Source, Symbol, Timestamp, Payload). `Encode()`/`Decode()` using `encoding/json`. Unit tests verifying round-trip. Comment block explaining why JSON over a binary format.
 
 ### Success Criteria
