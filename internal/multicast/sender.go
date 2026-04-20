@@ -97,3 +97,7 @@ func (s *SenderConn) WriteTo(b []byte, dst net.Addr) (int, error) {
 func (s *SenderConn) Close() error {
 	return s.conn.Close()
 }
+
+// PC returns the underlying ipv4.PacketConn for IGMP membership management.
+// *ipv4.PacketConn satisfies the IGMPConn interface defined in receiver.go.
+func (s *SenderConn) PC() *ipv4.PacketConn { return s.pc }
