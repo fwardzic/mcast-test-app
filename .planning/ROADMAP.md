@@ -88,7 +88,7 @@ Phase 6 → Container & K8s   static builds, Dockerfile, Kubernetes manifests
 
 ### Plans
 1. ✅ **`cmd/receiver` — socket setup & receive loop** — `flag` parsing for `-group`, `-port`, `-iface`; `net.ListenUDP` → `ipv4.NewPacketConn`; `SetControlMessage(FlagTTL|FlagSrc|FlagDst, true)`; `receiveLoop` goroutine reads into buffered `packetCh (64)`.
-2. **`groupManager` goroutine** — owns the `map[string]*GroupStats` (packets received, last sequence, gap count); processes decoded packets from `packetCh`; gap detection: `if seq != lastSeq+1 { gaps += seq - lastSeq - 1 }`; plain `log/slog` output per packet with counter summary.
+2. ✅ **`groupManager` goroutine** — owns the `map[string]*GroupStats` (packets received, last sequence, gap count); processes decoded packets from `packetCh`; gap detection: `if seq != lastSeq+1 { gaps += seq - lastSeq - 1 }`; plain `log/slog` output per packet with counter summary.
 3. **Graceful shutdown** — `signal.NotifyContext` → `context.Cancel`; `receiveLoop` exits → closes `packetCh` → `groupManager` drains and leaves groups; `LeaveASM`/`LeaveSSM` called per joined group; `main` waits on `wg`. Comments on shutdown ordering.
 
 ### Success Criteria

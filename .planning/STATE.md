@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
 current_phase: 04-receiver-core
-current_plan: 2
+current_plan: 3
 status: executing
 last_updated: "2026-04-20"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 18
-  completed_plans: 8
-  percent: 44
+  completed_plans: 9
+  percent: 50
 ---
 
 # State: mcast-test-app
@@ -87,8 +87,8 @@ None.
 ### Plans
 
 - [x] 4.1 ReceiverConn socket wrapper
-- [ ] 4.2 `groupManager` goroutine
-- [ ] 4.3 Graceful shutdown
+- [x] 4.2 Receiver binary: flags, validation, main orchestration
+- [ ] 4.3 Receiver tests
 
 ---
 
@@ -127,7 +127,8 @@ None.
 | 2026-04-20 | Anchor .gitignore binary patterns | `/sender` and `/receiver` instead of `sender`/`receiver` to avoid ignoring cmd/ subdirectories |
 | 2026-04-20 | `contains` helper over `strings.Contains` in test | Avoids extra import for single use |
 | 2026-04-20 | TTL default 2 in sender binary | Cross-node multicast testing needs one router hop; differs from config.DefaultTTL=1 |
-| 2026-04-20 | go 1.25 auto-upgrade accepted | `go get golang.org/x/net` bumped go directive; no breaking changes |
+| 2026-04-20 | Sender restart resets LastSeq without gap count | D-14: legitimate restart should not inflate gap counter |
+| 2026-04-20 | Watcher goroutine pattern for blocking reads | Close conn on ctx.Done to unblock ReadFrom; check ctx.Err() to distinguish shutdown from error |
 
 ---
 
