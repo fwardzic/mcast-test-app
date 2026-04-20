@@ -2,6 +2,8 @@
 // These types are used by both the sender and receiver to describe multicast group parameters.
 package config
 
+import "errors"
+
 // GroupSpec describes a single multicast group that the sender or receiver will operate on.
 // Each field maps to a CLI flag or config value; see cmd/sender and cmd/receiver for usage.
 type GroupSpec struct {
@@ -35,3 +37,15 @@ const (
 	DefaultTTL   = 1
 	DefaultRate  = 1 // packets per second
 )
+
+// Validate checks that GroupSpec fields are within acceptable ranges.
+// It returns a non-nil error describing the first invalid field found.
+func (g GroupSpec) Validate() error {
+	if g.Port < 1 || g.Port > 65535 {
+		return errors.New("config: Port must be between 1 and 65535")
+	}
+	if g.TTL < 0 || g.TTL > 255 {
+		return errors.New("config: TTL must be between 0 and 255")
+	}
+	return nil
+}
