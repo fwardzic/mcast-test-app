@@ -3,6 +3,7 @@ package multicast
 import (
 	"fmt"
 	"net"
+	"sync"
 
 	"golang.org/x/net/ipv4"
 )
@@ -12,8 +13,10 @@ import (
 // specific port and enables control-message flags so each ReadFrom returns
 // the TTL, source IP, and destination IP of the incoming packet.
 type ReceiverConn struct {
-	pc   *ipv4.PacketConn
-	conn net.PacketConn
+	pc       *ipv4.PacketConn
+	conn     net.PacketConn
+	closeOnce sync.Once
+	closeErr  error
 }
 
 // NewReceiverConn creates a multicast receiver socket bound to the given port.
@@ -50,7 +53,10 @@ func NewReceiverConn(port int) (*ReceiverConn, error) {
 // Close shuts down the receiver socket. We close the underlying net.PacketConn
 // which owns the file descriptor — the ipv4.PacketConn is just a wrapper.
 func (r *ReceiverConn) Close() error {
-	return r.conn.Close()
+	r.closeOnce.Do(func() {
+		r.closeErr = r.conn.Close()
+	})
+	return r.closeErr
 }
 
 // PC returns the underlying ipv4.PacketConn for IGMP membership management
