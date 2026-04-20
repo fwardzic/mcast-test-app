@@ -2,9 +2,34 @@ package config
 
 import (
 	"encoding/json"
+	"net"
 	"strings"
 	"testing"
 )
+
+func TestIsSSMAddress(t *testing.T) {
+	tests := []struct {
+		name string
+		ip   string
+		want bool
+	}{
+		{"SSM lower bound", "232.0.0.0", true},
+		{"SSM mid", "232.1.2.3", true},
+		{"SSM upper bound", "232.255.255.255", true},
+		{"ASM 239.x", "239.1.1.1", false},
+		{"ASM 224.x", "224.0.0.1", false},
+		{"unicast", "10.0.0.1", false},
+		{"just above SSM", "233.0.0.0", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ip := net.ParseIP(tc.ip)
+			if got := IsSSMAddress(ip); got != tc.want {
+				t.Errorf("IsSSMAddress(%s) = %v, want %v", tc.ip, got, tc.want)
+			}
+		})
+	}
+}
 
 func TestGroupSpecJSONRoundTrip(t *testing.T) {
 	gs := GroupSpec{
