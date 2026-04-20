@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
-current_phase: "02"
-current_plan: 3
+current_phase: 04-receiver-core
+current_plan: 2
 status: executing
 last_updated: "2026-04-20"
 progress:
-  total_phases: 2
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 72
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 8
+  percent: 44
 ---
 
 # State: mcast-test-app
 
 **Last updated:** 2026-04-20
-**Current phase:** 02
-**Current plan:** 3
+**Current phase:** --phase
+**Current plan:** 1
 **Overall status:** In progress
 
 ---
@@ -30,7 +30,7 @@ progress:
 | 1 | Foundation | ✅ Complete | 3 / 3 |
 | 2 | Sender Core | 🔄 In progress | 2 / 3 |
 | 3 | Multi-Group & IGMP | 🔲 Not started | 0 / 3 |
-| 4 | Receiver Core | 🔲 Not started | 0 / 3 |
+| 4 | Receiver Core | 🔄 In progress | 1 / 3 |
 | 5 | Terminal Display | 🔲 Not started | 0 / 3 |
 | 6 | Container & K8s | 🔲 Not started | 0 / 3 |
 
@@ -38,7 +38,7 @@ progress:
 
 ## Phase 1 — Foundation
 
-**Status:** Executing Plan 02-03
+**Status:** Executing Phase --phase
 **Goal:** Establish project skeleton and shared internal packages.
 
 ### Plans
@@ -81,12 +81,12 @@ None.
 
 ## Phase 4 — Receiver Core
 
-**Status:** Not started (blocked on Phase 3)
+**Status:** In progress
 **Goal:** Working receiver with gap detection and graceful shutdown (log-only UI).
 
 ### Plans
 
-- [ ] 4.1 `cmd/receiver` socket setup & receive loop
+- [x] 4.1 ReceiverConn socket wrapper
 - [ ] 4.2 `groupManager` goroutine
 - [ ] 4.3 Graceful shutdown
 
@@ -133,4 +133,4 @@ None.
 
 *State file created: 2026-04-20*
 
-**Planned Phase:** 02 (sender-core) — 2 plans — 2026-04-20T11:41:07.382Z
+**Planned Phase:** 04 (receiver-core) — 3 plans — 2026-04-20T21:31:09.631Z
