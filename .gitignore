@@ -1,5 +1,5 @@
 .planning/
 bin/
-sender
-receiver
+/sender
+/receiver
 *.exe
