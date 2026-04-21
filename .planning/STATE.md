@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
-current_phase: 04-receiver-core
-current_plan: 3
+current_phase: 5
+current_plan: 2
 status: executing
-last_updated: "2026-04-20"
+last_updated: "2026-04-21"
 progress:
-  total_phases: 6
+  total_phases: 5
   completed_phases: 3
-  total_plans: 18
+  total_plans: 9
   completed_plans: 9
-  percent: 50
+  percent: 100
 ---
 
 # State: mcast-test-app
@@ -30,15 +30,15 @@ progress:
 | 1 | Foundation | ✅ Complete | 3 / 3 |
 | 2 | Sender Core | 🔄 In progress | 2 / 3 |
 | 3 | Multi-Group & IGMP | 🔲 Not started | 0 / 3 |
-| 4 | Receiver Core | 🔄 In progress | 1 / 3 |
-| 5 | Terminal Display | 🔲 Not started | 0 / 3 |
+| 4 | Receiver Core | ✅ Complete | 3 / 3 |
+| 5 | Terminal Display | 🔄 In progress | 1 / 3 |
 | 6 | Container & K8s | 🔲 Not started | 0 / 3 |
 
 ---
 
 ## Phase 1 — Foundation
 
-**Status:** Executing Phase --phase
+**Status:** Executing Phase 5
 **Goal:** Establish project skeleton and shared internal packages.
 
 ### Plans
@@ -81,14 +81,14 @@ None.
 
 ## Phase 4 — Receiver Core
 
-**Status:** In progress
+**Status:** Complete
 **Goal:** Working receiver with gap detection and graceful shutdown (log-only UI).
 
 ### Plans
 
 - [x] 4.1 ReceiverConn socket wrapper
 - [x] 4.2 Receiver binary: flags, validation, main orchestration
-- [ ] 4.3 Receiver tests
+- [x] 4.3 Receiver tests
 
 ---
 
@@ -99,7 +99,7 @@ None.
 
 ### Plans
 
-- [ ] 5.1 `internal/display` package
+- [x] 5.1 `internal/display` package
 - [ ] 5.2 `displayLoop` goroutine in receiver
 - [ ] 5.3 Per-group stats status line
 
@@ -129,9 +129,11 @@ None.
 | 2026-04-20 | TTL default 2 in sender binary | Cross-node multicast testing needs one router hop; differs from config.DefaultTTL=1 |
 | 2026-04-20 | Sender restart resets LastSeq without gap count | D-14: legitimate restart should not inflate gap counter |
 | 2026-04-20 | Watcher goroutine pattern for blocking reads | Close conn on ctx.Done to unblock ReadFrom; check ctx.Err() to distinguish shutdown from error |
+| 2026-04-20 | `calcGaps` helper for gap-detection testing | Tests algorithm in isolation without channel plumbing; mirrors groupManager branch-for-branch |
+| 2026-04-21 | RingBuf exported for use by main.go | displayLoop in cmd/receiver needs to create and manage the ring buffer |
 
 ---
 
 *State file created: 2026-04-20*
 
-**Planned Phase:** 04 (receiver-core) — 3 plans — 2026-04-20T21:31:09.631Z
+**Planned Phase:** 5 (terminal-display) — 2 plans — 2026-04-20T22:19:40.236Z

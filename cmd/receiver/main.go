@@ -14,13 +14,17 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	flag "github.com/spf13/pflag"
 	"golang.org/x/net/ipv4"
+	"golang.org/x/term"
 
 	"github.com/fwardzic/mcast-test-app/internal/config"
+	"github.com/fwardzic/mcast-test-app/internal/display"
 	"github.com/fwardzic/mcast-test-app/internal/multicast"
 	"github.com/fwardzic/mcast-test-app/internal/packet"
 )
@@ -102,6 +106,14 @@ func main() {
 
 	slog.Info("receiver starting", "groups", *groups, "port", *port, "iface", *iface)
 
+	// Detect whether stdout is a TTY. If so, use the ANSI scrolling display;
+	// otherwise fall back to structured log output (e.g. when piped or in k8s).
+	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
+	var termHeight int
+	if isTTY {
+		_, termHeight, _ = term.GetSize(int(os.Stdout.Fd()))
+	}
+
 	packetCh := make(chan ReceivedPacket, 64)
 
 	var wg sync.WaitGroup
@@ -116,8 +128,26 @@ func main() {
 	wg.Add(1)
 	go receiveLoop(ctx, rc.PC(), packetCh, &wg)
 
-	wg.Add(1)
-	go groupManager(packetCh, specs, rc.PC(), ifi, &wg)
+	if !isTTY || termHeight < 10 {
+		if termHeight < 10 && isTTY {
+			slog.Warn("terminal too small for ANSI display, falling back to log output", "height", termHeight)
+		}
+		wg.Add(1)
+		go groupManager(packetCh, nil, nil, specs, rc.PC(), ifi, &wg)
+	} else {
+		scrollRows := termHeight - 1
+		display.Init(os.Stdout, scrollRows)
+		defer display.Teardown(os.Stdout, termHeight)
+
+		linesCh := make(chan string, 64)
+		statsCh := make(chan string, 4)
+
+		wg.Add(1)
+		go displayLoop(ctx, linesCh, statsCh, scrollRows, &wg)
+
+		wg.Add(1)
+		go groupManager(packetCh, linesCh, statsCh, specs, rc.PC(), ifi, &wg)
+	}
 
 	wg.Wait()
 	slog.Info("receiver: shutdown complete")
@@ -207,6 +237,95 @@ func receiveLoop(ctx context.Context, pc *ipv4.PacketConn, packetCh chan<- Recei
 	}
 }
 
+// displayLoop renders the terminal UI at 10 Hz. It receives pre-formatted
+// lines from groupManager via linesCh and stats updates via statsCh.
+// It does NOT read from packetCh — groupManager is the sole consumer.
+func displayLoop(
+	ctx context.Context,
+	linesCh <-chan string,
+	statsCh <-chan string,
+	scrollRows int,
+	wg *sync.WaitGroup,
+) {
+	defer wg.Done()
+	ring := display.NewRingBuf(scrollRows)
+	status := ""
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGWINCH)
+	defer signal.Stop(sigCh)
+	for {
+		select {
+		case line, ok := <-linesCh:
+			if !ok {
+				return
+			}
+			ring.Push(line)
+		case s, ok := <-statsCh:
+			if ok {
+				status = s
+			}
+		case <-ticker.C:
+			display.Render(os.Stdout, ring.Ordered(), status, scrollRows)
+		case <-sigCh:
+			_, h, err := term.GetSize(int(os.Stdout.Fd()))
+			if err == nil && h >= 10 {
+				scrollRows = h - 1
+				ring = display.NewRingBuf(scrollRows)
+				display.Init(os.Stdout, scrollRows)
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// formatLine formats a received packet into a single display line with color.
+func formatLine(rp ReceivedPacket, colorCode int) string {
+	delta := "?"
+	t, err := time.Parse("2006-01-02T15:04:05.000Z07:00", rp.Pkt.Timestamp)
+	if err == nil {
+		delta = fmt.Sprintf("%d", time.Since(t).Milliseconds())
+	}
+	line := fmt.Sprintf("%s -> %s  seq=%d  ttl=%d  sym=%s  d=%sms",
+		rp.Src.String(), rp.Dst.String(),
+		rp.Pkt.Sequence, rp.TTL, rp.Pkt.Symbol, delta)
+	return display.Colorize(line, colorCode)
+}
+
+// rateWindow tracks packet timestamps over a sliding window to compute rate.
+type rateWindow struct {
+	times []time.Time
+}
+
+func (w *rateWindow) record(t time.Time) {
+	w.times = append(w.times, t)
+}
+
+func (w *rateWindow) rate() float64 {
+	const window = 5 * time.Second
+	cutoff := time.Now().Add(-window)
+	start := 0
+	for start < len(w.times) && w.times[start].Before(cutoff) {
+		start++
+	}
+	w.times = w.times[start:]
+	return float64(len(w.times)) / window.Seconds()
+}
+
+// buildStatus creates the status line summarising per-group stats and rates.
+func buildStatus(specs []config.GroupSpec, stats map[string]*GroupStats, rates map[string]*rateWindow) string {
+	parts := make([]string, 0, len(specs))
+	for _, spec := range specs {
+		gs := stats[spec.Group]
+		r := rates[spec.Group].rate()
+		parts = append(parts, fmt.Sprintf("%s: %d pkts  %d gaps  %.1f pkt/s",
+			spec.Group, gs.PktCount, gs.GapCount, r))
+	}
+	return strings.Join(parts, " | ")
+}
+
 // groupManager processes decoded packets from packetCh, tracking per-group
 // sequence numbers and gap counts. When the channel closes (receiveLoop exited),
 // it leaves all multicast groups before returning.
@@ -217,6 +336,8 @@ func receiveLoop(ctx context.Context, pc *ipv4.PacketConn, packetCh chan<- Recei
 // without counting gaps — the sender legitimately restarted.
 func groupManager(
 	packetCh <-chan ReceivedPacket,
+	linesCh chan<- string,
+	statsCh chan<- string,
 	specs []config.GroupSpec,
 	conn multicast.IGMPConn,
 	ifi *net.Interface,
@@ -228,6 +349,17 @@ func groupManager(
 	stats := make(map[string]*GroupStats)
 	for _, spec := range specs {
 		stats[spec.Group] = &GroupStats{FirstPkt: true}
+	}
+
+	// Color map uses normalised IP keys to match rp.Dst.String() lookups.
+	colorMap := make(map[string]int, len(specs))
+	for i, spec := range specs {
+		key := net.ParseIP(spec.Group).String()
+		colorMap[key] = display.GroupColor(i)
+	}
+	rates := make(map[string]*rateWindow)
+	for _, spec := range specs {
+		rates[spec.Group] = &rateWindow{}
 	}
 
 	// range over channel: blocks until receiveLoop closes packetCh.
@@ -271,6 +403,22 @@ func groupManager(
 
 		gs.PktCount++
 
+		// Track rate and send formatted line + stats to displayLoop (TTY mode).
+		rates[rp.Dst.String()].record(time.Now())
+		if linesCh != nil {
+			colorCode := colorMap[rp.Dst.String()]
+			select {
+			case linesCh <- formatLine(rp, colorCode):
+			default: // don't block if displayLoop hasn't consumed yet
+			}
+		}
+		if statsCh != nil {
+			select {
+			case statsCh <- buildStatus(specs, stats, rates):
+			default: // don't block if displayLoop hasn't consumed yet
+			}
+		}
+
 		slog.Info("recv",
 			"group", rp.Dst.String(),
 			"seq", pkt.Sequence,
@@ -295,5 +443,13 @@ func groupManager(
 				slog.Error("ASM leave failed", "group", spec.Group, "err", err)
 			}
 		}
+	}
+
+	// Close display channels so displayLoop can exit cleanly.
+	if linesCh != nil {
+		close(linesCh)
+	}
+	if statsCh != nil {
+		close(statsCh)
 	}
 }
