@@ -1,4 +1,4 @@
-.PHONY: build test lint clean
+.PHONY: build test lint clean build-static build-linux-amd64 build-linux-arm64
 
 build:
 	go build -o bin/sender ./cmd/sender
@@ -12,3 +12,13 @@ lint:
 
 clean:
 	rm -rf bin/
+
+build-linux-amd64:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-extldflags '-static'" -o bin/linux-amd64/sender ./cmd/sender
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags="-extldflags '-static'" -o bin/linux-amd64/receiver ./cmd/receiver
+
+build-linux-arm64:
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags netgo -ldflags="-extldflags '-static'" -o bin/linux-arm64/sender ./cmd/sender
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags netgo -ldflags="-extldflags '-static'" -o bin/linux-arm64/receiver ./cmd/receiver
+
+build-static: build-linux-amd64 build-linux-arm64

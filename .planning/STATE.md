@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
 current_phase: 5
-current_plan: 2
+current_plan: 3
 status: executing
 last_updated: "2026-04-21"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 9
-  completed_plans: 9
+  completed_plans: 10
   percent: 100
 ---
 
@@ -31,7 +31,7 @@ progress:
 | 2 | Sender Core | 🔄 In progress | 2 / 3 |
 | 3 | Multi-Group & IGMP | 🔲 Not started | 0 / 3 |
 | 4 | Receiver Core | ✅ Complete | 3 / 3 |
-| 5 | Terminal Display | 🔄 In progress | 1 / 3 |
+| 5 | Terminal Display | 🔄 In progress | 2 / 3 |
 | 6 | Container & K8s | 🔲 Not started | 0 / 3 |
 
 ---
@@ -100,7 +100,7 @@ None.
 ### Plans
 
 - [x] 5.1 `internal/display` package
-- [ ] 5.2 `displayLoop` goroutine in receiver
+- [x] 5.2 `displayLoop` goroutine in receiver
 - [ ] 5.3 Per-group stats status line
 
 ---

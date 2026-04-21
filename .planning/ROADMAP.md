@@ -108,7 +108,7 @@ Phase 6 → Container & K8s   static builds, Dockerfile, Kubernetes manifests
 
 ### Plans
 1. ✅ **`internal/display` package** — `Init(rows int)`: hide cursor + set scroll region; `Render(lines []string, status string)`: position cursor, write lines from ring buffer, write status line below region; `Teardown()`: reset scroll region + show cursor. TTY detection via `term.IsTerminal`; plain `fmt.Println` fallback. Unit tests with mock writer.
-2. **`displayLoop` goroutine in receiver** — reads from `packetCh`; formats each packet as `"[SEQ] src:port → dst:port  TTL=N  SYMBOL  payload"`; maintains 20-line ring buffer; calls `display.Render` at ~10 Hz via `time.Ticker` to avoid per-packet redraws; IP header fields sourced from `ipv4.ControlMessage`.
+2. ✅ **`displayLoop` goroutine in receiver** — reads from `packetCh`; formats each packet as `"[SEQ] src:port → dst:port  TTL=N  SYMBOL  payload"`; maintains 20-line ring buffer; calls `display.Render` at ~10 Hz via `time.Ticker` to avoid per-packet redraws; IP header fields sourced from `ipv4.ControlMessage`.
 3. **Per-group stats status line** — `groupManager` maintains `GroupStats{pkts, gaps, rate}` and sends a formatted summary string to `displayLoop` via a separate `statsCh`; status line rendered below scroll region showing one line per joined group.
 
 ### Success Criteria
