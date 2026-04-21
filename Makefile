@@ -1,7 +1,7 @@
 IMAGE_NAME ?= mcast-test-app
 IMAGE_TAG  ?= latest
 
-.PHONY: build test lint clean build-static build-linux-amd64 build-linux-arm64 docker-build
+.PHONY: build test lint clean build-static build-linux-amd64 build-linux-arm64 docker-build docker-buildx
 
 build:
 	go build -o bin/sender ./cmd/sender
@@ -28,3 +28,6 @@ build-static: build-linux-amd64 build-linux-arm64
 
 docker-build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
+
+docker-buildx:
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME):$(IMAGE_TAG) .
