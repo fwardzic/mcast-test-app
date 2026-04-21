@@ -48,7 +48,7 @@ spec:
         add:
           # NET_RAW   — needed to create raw IP sockets for sending multicast
           #             datagrams and for setting IP_MULTICAST_TTL.
+          # NOTE: NET_ADMIN is NOT required for the sender. Setting
+          # IP_MULTICAST_TTL and IP_MULTICAST_IF are ordinary setsockopt
+          # calls that do not need elevated capabilities.
           - NET_RAW
-          # NET_ADMIN — needed to configure multicast group membership (IGMP)
-          #             via IP_ADD_MEMBERSHIP / IP_DROP_MEMBERSHIP socket opts.
-          - NET_ADMIN
