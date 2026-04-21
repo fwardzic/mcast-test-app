@@ -18,6 +18,15 @@ spec:
   hostNetwork: true
   nodeSelector:
     kubernetes.io/os: linux
+  # Ensure sender and receiver never land on the same node, which would
+  # cause a port 5000 conflict since both use hostNetwork.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app: mcast-sender
+        topologyKey: kubernetes.io/hostname
   containers:
   - name: receiver
     image: mcast-test-app:latest
