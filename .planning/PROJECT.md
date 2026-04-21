@@ -10,26 +10,25 @@ Clearly show multicast traffic flowing between sender and receiver with enough d
 
 ## Requirements
 
-### Validated
+### Validated (v0.15)
 
-(None yet — ship to validate)
+- [x] Go sender binary that sends sequenced ticker-style payloads to multicast groups
+- [x] Go receiver binary that joins multicast groups and displays received traffic
+- [x] Simple payload format: sequence number + source info + short data
+- [x] Fixed ~20-line terminal display that scrolls within a region
+- [x] Display IP packet header summary alongside payload
+- [x] Support for multiple multicast groups simultaneously
+- [x] ASM (any-source multicast) group join/leave
+- [x] SSM (source-specific multicast) group join/leave with source IP filtering
+- [x] IGMPv2 and IGMPv3 support
+- [x] Command-line flags for initial config (group, port, interface)
+- [x] Kubernetes manifests using nicolaka/netshoot as base image
+- [x] Beginner-friendly Go code with clear comments
+- [x] Static cross-compiled binaries (linux/amd64, linux/arm64)
 
 ### Active
 
-- [ ] Go sender binary that sends sequenced ticker-style payloads to multicast groups
-- [ ] Go receiver binary that joins multicast groups and displays received traffic
-- [ ] Simple payload format: sequence number + source info + short data (not realistic market data)
-- [ ] Fixed ~20-line terminal display that scrolls within a region (no full-screen scroll)
-- [ ] Display IP packet header summary alongside payload
-- [ ] Support for multiple multicast groups simultaneously
-- [ ] ASM (any-source multicast) group join/leave
-- [ ] SSM (source-specific multicast) group join/leave with source IP filtering
-- [ ] IGMPv2 support
-- [ ] IGMPv3 support
-- [ ] Command-line flags for initial config (group, port, interface)
-- [ ] Interactive commands while running (join, leave groups dynamically)
-- [ ] Kubernetes manifests using nicolaka/netshoot as base image
-- [ ] Beginner-friendly Go code with clear comments explaining why, not just what
+(None — next milestone TBD)
 
 ### Out of Scope
 
@@ -38,6 +37,10 @@ Clearly show multicast traffic flowing between sender and receiver with enough d
 - Performance benchmarking or latency measurement — this is a functional test tool
 - Docker Compose setup — Kubernetes only
 - IPv6 multicast / MLD — IPv4 IGMP only for v1
+
+## Current State
+
+**Shipped:** v0.15 (Apr 21, 2026) — All 6 phases complete, 27/27 requirements satisfied.
 
 ## Context
 
@@ -58,11 +61,11 @@ Clearly show multicast traffic flowing between sender and receiver with enough d
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Go over Python/C | Learning Go is an explicit goal; Go has good net/multicast stdlib support | — Pending |
-| netshoot base image | Already has networking debug tools (tcpdump, ip, nslookup) for troubleshooting | — Pending |
-| Simple payload over real market protocol | Code must be understandable by a Go beginner | — Pending |
-| Kubernetes over Docker Compose | Target environment is Kubernetes | — Pending |
-| ANSI terminal scrolling region | Avoids ncurses/tui library complexity; keeps code simple | — Pending |
+| Go over Python/C | Learning Go is an explicit goal; Go has good net/multicast stdlib support | ✅ Validated |
+| netshoot base image | Already has networking debug tools (tcpdump, ip, nslookup) for troubleshooting | ✅ Validated |
+| Simple payload over real market protocol | Code must be understandable by a Go beginner | ✅ Validated |
+| Kubernetes over Docker Compose | Target environment is Kubernetes | ✅ Validated |
+| ANSI terminal scrolling region | Avoids ncurses/tui library complexity; keeps code simple | ✅ Validated |
 
 ## Evolution
 
@@ -82,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after initialization*
+*Last updated: 2026-04-21 after v0.15 milestone completion*
