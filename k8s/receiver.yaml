@@ -36,6 +36,13 @@ spec:
     imagePullPolicy: IfNotPresent
     command: ["receiver"]
     args: ["--group", "239.1.1.1", "--port", "5000"]
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "32Mi"
+      limits:
+        cpu: "200m"
+        memory: "64Mi"
     # stdin: true — keeps the container's standard input open even when
     # nothing is actively attached.  Required so that kubectl attach can
     # connect later without restarting the pod.
