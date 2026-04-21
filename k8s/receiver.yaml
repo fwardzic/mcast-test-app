@@ -1,0 +1,42 @@
+# Kubernetes Pod manifest for the multicast receiver.
+# Deploy with: kubectl apply -f k8s/receiver.yaml
+# Attach interactively: kubectl attach -it mcast-receiver
+# Remove with: kubectl delete -f k8s/receiver.yaml
+#
+# The receiver joins multicast groups, listens for sequenced payloads from
+# the sender, detects packet gaps, and renders a live ANSI terminal display.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mcast-receiver
+  labels:
+    app: mcast-receiver
+spec:
+  # hostNetwork: true — see sender.yaml for the full rationale.  Short
+  # version: multicast IGMP reports must be sent on the node interface,
+  # not inside the pod overlay, for the upstream router to see them.
+  hostNetwork: true
+  nodeSelector:
+    kubernetes.io/os: linux
+  containers:
+  - name: receiver
+    image: mcast-test-app:latest
+    command: ["receiver"]
+    args: ["--group", "239.1.1.1", "--port", "5000"]
+    # stdin: true — keeps the container's standard input open even when
+    # nothing is actively attached.  Required so that kubectl attach can
+    # connect later without restarting the pod.
+    stdin: true
+    # tty: true — allocates a pseudo-TTY for the container.  This is needed
+    # so that the ANSI escape codes used by the display (cursor movement,
+    # colour) are interpreted correctly when viewed via kubectl attach -it.
+    tty: true
+    securityContext:
+      capabilities:
+        add:
+          # NET_RAW   — needed to create raw IP sockets for receiving
+          #             multicast datagrams and reading IP header fields.
+          - NET_RAW
+          # NET_ADMIN — needed to join/leave multicast groups via IGMP
+          #             (IP_ADD_MEMBERSHIP / IP_DROP_MEMBERSHIP).
+          - NET_ADMIN
