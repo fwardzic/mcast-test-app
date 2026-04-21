@@ -12,22 +12,12 @@ metadata:
   labels:
     app: mcast-receiver
 spec:
-  # hostNetwork: true — see sender.yaml for the full rationale.  Short
-  # version: multicast IGMP reports must be sent on the node interface,
-  # not inside the pod overlay, for the upstream router to see them.
-  hostNetwork: true
+  # Runs in pod network namespace (not hostNetwork).  Multicast will flow
+  # over a secondary interface attached by Multus / SR-IOV, not over the
+  # primary CNI path.  Use the --iface flag to bind to the secondary NIC.
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/os: linux
-  # Ensure sender and receiver never land on the same node, which would
-  # cause a port 5000 conflict since both use hostNetwork.
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchLabels:
-            app: mcast-sender
-        topologyKey: kubernetes.io/hostname
   containers:
   - name: receiver
     image: mcast-test-app:latest
