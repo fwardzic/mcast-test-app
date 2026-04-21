@@ -16,6 +16,7 @@ spec:
   # multicast between pod namespaces, so host networking is required for
   # IGMP reports to reach the router and for multicast traffic to flow.
   hostNetwork: true
+  restartPolicy: Never
   nodeSelector:
     kubernetes.io/os: linux
   # Ensure sender and receiver never land on the same node, which would

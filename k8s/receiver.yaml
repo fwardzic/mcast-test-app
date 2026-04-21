@@ -16,6 +16,7 @@ spec:
   # version: multicast IGMP reports must be sent on the node interface,
   # not inside the pod overlay, for the upstream router to see them.
   hostNetwork: true
+  restartPolicy: Never
   nodeSelector:
     kubernetes.io/os: linux
   # Ensure sender and receiver never land on the same node, which would
