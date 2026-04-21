@@ -10,8 +10,8 @@ progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 14
+  percent: 93
 ---
 
 # State: mcast-test-app
@@ -113,7 +113,7 @@ None.
 ### Plans
 
 - [x] 6.1 Static build pipeline (Makefile)
-- [ ] 6.2 Multi-stage Dockerfile
+- [x] 6.2 Multi-stage Dockerfile
 - [ ] 6.3 Kubernetes manifests
 
 ---

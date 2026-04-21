@@ -1,0 +1,34 @@
+# Kubernetes Pod manifest for the multicast sender.
+# Deploy with: kubectl apply -f k8s/sender.yaml
+# Remove with: kubectl delete -f k8s/sender.yaml
+#
+# The sender transmits sequenced ticker-style payloads to one or more
+# multicast groups so that multicast routing in the cluster can be verified.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mcast-sender
+  labels:
+    app: mcast-sender
+spec:
+  # hostNetwork: true — bypass the pod overlay network and use the node's
+  # physical/bond interface directly.  Most CNI plugins do not forward
+  # multicast between pod namespaces, so host networking is required for
+  # IGMP reports to reach the router and for multicast traffic to flow.
+  hostNetwork: true
+  nodeSelector:
+    kubernetes.io/os: linux
+  containers:
+  - name: sender
+    image: mcast-test-app:latest
+    command: ["sender"]
+    args: ["--group", "239.1.1.1", "--port", "5000", "--rate", "1"]
+    securityContext:
+      capabilities:
+        add:
+          # NET_RAW   — needed to create raw IP sockets for sending multicast
+          #             datagrams and for setting IP_MULTICAST_TTL.
+          - NET_RAW
+          # NET_ADMIN — needed to configure multicast group membership (IGMP)
+          #             via IP_ADD_MEMBERSHIP / IP_DROP_MEMBERSHIP socket opts.
+          - NET_ADMIN
