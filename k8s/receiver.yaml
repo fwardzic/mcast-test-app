@@ -30,6 +30,10 @@ spec:
   containers:
   - name: receiver
     image: mcast-test-app:latest
+    # Use IfNotPresent to avoid pulling from a registry. Load the image
+    # locally first with: kind load docker-image mcast-test-app:latest
+    # Or push to a registry and update the image reference accordingly.
+    imagePullPolicy: IfNotPresent
     command: ["receiver"]
     args: ["--group", "239.1.1.1", "--port", "5000"]
     # stdin: true — keeps the container's standard input open even when
