@@ -1,4 +1,7 @@
-.PHONY: build test lint clean build-static build-linux-amd64 build-linux-arm64
+IMAGE_NAME ?= mcast-test-app
+IMAGE_TAG  ?= latest
+
+.PHONY: build test lint clean build-static build-linux-amd64 build-linux-arm64 docker-build
 
 build:
 	go build -o bin/sender ./cmd/sender
@@ -22,3 +25,6 @@ build-linux-arm64:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags netgo -ldflags="-extldflags '-static'" -o bin/linux-arm64/receiver ./cmd/receiver
 
 build-static: build-linux-amd64 build-linux-arm64
+
+docker-build:
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .

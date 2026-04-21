@@ -127,7 +127,7 @@ Phase 6 → Container & K8s   static builds, Dockerfile, Kubernetes manifests
 **Requirements mapped:** BILD-01, BILD-02, BILD-03, BILD-04, BILD-05
 
 ### Plans
-1. **Static build pipeline** — `Makefile` targets: `build-linux-amd64` and `build-linux-arm64` using `CGO_ENABLED=0 GOOS=linux GOARCH=... go build -tags netgo -ldflags="-extldflags '-static'"`. Verification step: `file bin/sender | grep 'statically linked'` fails the build if not static.
+1. ✅ **Static build pipeline** — `Makefile` targets: `build-linux-amd64` and `build-linux-arm64` using `CGO_ENABLED=0 GOOS=linux GOARCH=... go build -tags netgo -ldflags="-extldflags '-static'"`. Verification step: `file bin/sender | grep 'statically linked'` fails the build if not static.
 2. **Multi-stage Dockerfile** — `FROM golang:1.26.2-alpine AS builder`: copies source, runs static build + static verification; `FROM nicolaka/netshoot:v0.15`: copies both binaries. Comment block explaining why two stages and why `netshoot` as runtime.
 3. **Kubernetes manifests** — `k8s/sender.yaml` and `k8s/receiver.yaml`: `securityContext.capabilities.add: [NET_RAW, NET_ADMIN]`; `stdin: true`; `tty: true`; `hostNetwork: true` with inline comment explaining CNI multicast caveat; `nodeSelector: kubernetes.io/os: linux`. README section on prerequisites (CNI requirements, IGMP snooping, same-node vs cross-node).
 

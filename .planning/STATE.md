@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.15
 milestone_name: milestone
-current_phase: 5
-current_plan: 3
+current_phase: --phase
+current_plan: 1
 status: executing
-last_updated: "2026-04-21"
+last_updated: "2026-04-21T12:00:00.000Z"
 progress:
-  total_phases: 5
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 10
-  percent: 100
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 13
+  percent: 87
 ---
 
 # State: mcast-test-app
@@ -32,13 +32,13 @@ progress:
 | 3 | Multi-Group & IGMP | 🔲 Not started | 0 / 3 |
 | 4 | Receiver Core | ✅ Complete | 3 / 3 |
 | 5 | Terminal Display | 🔄 In progress | 2 / 3 |
-| 6 | Container & K8s | 🔲 Not started | 0 / 3 |
+| 6 | Container & K8s | 🔄 In progress | 1 / 3 |
 
 ---
 
 ## Phase 1 — Foundation
 
-**Status:** Executing Phase 5
+**Status:** Executing Phase --phase
 **Goal:** Establish project skeleton and shared internal packages.
 
 ### Plans
@@ -107,12 +107,12 @@ None.
 
 ## Phase 6 — Container & Kubernetes
 
-**Status:** Not started (blocked on Phase 5)
+**Status:** In progress
 **Goal:** Static binaries, multi-stage Dockerfile, Kubernetes manifests.
 
 ### Plans
 
-- [ ] 6.1 Static build pipeline (Makefile)
+- [x] 6.1 Static build pipeline (Makefile)
 - [ ] 6.2 Multi-stage Dockerfile
 - [ ] 6.3 Kubernetes manifests
 
@@ -131,6 +131,7 @@ None.
 | 2026-04-20 | Watcher goroutine pattern for blocking reads | Close conn on ctx.Done to unblock ReadFrom; check ctx.Err() to distinguish shutdown from error |
 | 2026-04-20 | `calcGaps` helper for gap-detection testing | Tests algorithm in isolation without channel plumbing; mirrors groupManager branch-for-branch |
 | 2026-04-21 | RingBuf exported for use by main.go | displayLoop in cmd/receiver needs to create and manage the ring buffer |
+| 2026-04-21 | Static cross-compile via Makefile targets | CGO_ENABLED=0 + netgo + extldflags static yields fully static ELF for container use |
 
 ---
 
