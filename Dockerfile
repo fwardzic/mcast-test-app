@@ -6,7 +6,7 @@
 #   - Alpine is small, keeping this stage lightweight
 #   - We compile here and discard this layer in the final image
 # =============================================================================
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 # Install 'file' utility so we can verify binaries are truly statically linked
 # during debugging — not strictly needed at runtime but useful for CI checks
