@@ -1,10 +1,3 @@
-# Kubernetes Pod manifest for the multicast receiver.
-# Deploy with: kubectl apply -f k8s/receiver.yaml
-# Attach interactively: kubectl attach -it mcast-receiver
-# Remove with: kubectl delete -f k8s/receiver.yaml
-#
-# The receiver joins multicast groups, listens for sequenced payloads from
-# the sender, detects packet gaps, and renders a live ANSI terminal display.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -12,18 +5,12 @@ metadata:
   labels:
     app: mcast-receiver
 spec:
-  # Runs in pod network namespace (not hostNetwork).  Multicast will flow
-  # over a secondary interface attached by Multus / SR-IOV, not over the
-  # primary CNI path.  Use the --iface flag to bind to the secondary NIC.
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/os: linux
   containers:
   - name: receiver
     image: mcast-test-app:latest
-    # Use IfNotPresent to avoid pulling from a registry. Load the image
-    # locally first with: kind load docker-image mcast-test-app:latest
-    # Or push to a registry and update the image reference accordingly.
     imagePullPolicy: IfNotPresent
     command: ["receiver"]
     args: ["--group", "239.1.1.1", "--port", "5000"]
@@ -34,20 +21,11 @@ spec:
       limits:
         cpu: "200m"
         memory: "64Mi"
-    # stdin: true — keeps the container's standard input open even when
-    # nothing is actively attached.  Required so that kubectl attach can
     # connect later without restarting the pod.
     stdin: true
-    # tty: true — allocates a pseudo-TTY for the container.  This is needed
-    # so that the ANSI escape codes used by the display (cursor movement,
-    # colour) are interpreted correctly when viewed via kubectl attach -it.
     tty: true
     securityContext:
       capabilities:
         add:
-          # NET_RAW   — needed to create raw IP sockets for receiving
-          #             multicast datagrams and reading IP header fields.
           - NET_RAW
-          # NET_ADMIN — needed to join/leave multicast groups via IGMP
-          #             (IP_ADD_MEMBERSHIP / IP_DROP_MEMBERSHIP).
           - NET_ADMIN

@@ -1,9 +1,3 @@
-# Kubernetes Pod manifest for the multicast sender.
-# Deploy with: kubectl apply -f k8s/sender.yaml
-# Remove with: kubectl delete -f k8s/sender.yaml
-#
-# The sender transmits sequenced ticker-style payloads to one or more
-# multicast groups so that multicast routing in the cluster can be verified.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -11,18 +5,12 @@ metadata:
   labels:
     app: mcast-sender
 spec:
-  # Runs in pod network namespace (not hostNetwork).  Multicast will flow
-  # over a secondary interface attached by Multus / SR-IOV, not over the
-  # primary CNI path.  Use the --iface flag to bind to the secondary NIC.
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/os: linux
   containers:
   - name: sender
     image: mcast-test-app:latest
-    # Use IfNotPresent to avoid pulling from a registry. Load the image
-    # locally first with: kind load docker-image mcast-test-app:latest
-    # Or push to a registry and update the image reference accordingly.
     imagePullPolicy: IfNotPresent
     command: ["sender"]
     args: ["--group", "239.1.1.1", "--port", "5000", "--rate", "1"]
@@ -36,9 +24,4 @@ spec:
     securityContext:
       capabilities:
         add:
-          # NET_RAW   — needed to create raw IP sockets for sending multicast
-          #             datagrams and for setting IP_MULTICAST_TTL.
-          # NOTE: NET_ADMIN is NOT required for the sender. Setting
-          # IP_MULTICAST_TTL and IP_MULTICAST_IF are ordinary setsockopt
-          # calls that do not need elevated capabilities.
           - NET_RAW

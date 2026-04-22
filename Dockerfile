@@ -55,8 +55,3 @@ FROM nicolaka/netshoot:v0.15
 # Copy compiled binaries from the builder stage into a standard PATH location
 COPY --from=builder /sender   /usr/local/bin/sender
 COPY --from=builder /receiver /usr/local/bin/receiver
-
-# Default entrypoint is the sender binary.
-# Override with 'command: [receiver]' in your Kubernetes pod spec to run
-# the receiver instead.
-ENTRYPOINT ["sender"]
